@@ -1,10 +1,13 @@
 import api from "@/services/api";
 import { useQuery, useMutation } from "@vue/apollo-composable";
-import { GET_INVESTIGATIONS, GET_INVESTIGATION, CREATE_INVESTIGATION, UPDATE_INVESTIGATION } from "@/services/queries/GraphqlQueries";
+//import { GET_INVESTIGATIONS, GET_INVESTIGATION, CREATE_INVESTIGATION, UPDATE_INVESTIGATION } from "@/services/queries/GraphqlQueries";
+
+import { createItem, updateItem } from '@directus/sdk';
 import type { CreateInvestigationDto, InvestigationDto } from "./dto/investigations.dto";
+import { FETCH_INVESTIGATIONS } from "./queries/DirectusQueries";
 
 export default {
-  create(payload: CreateInvestigationDto, onDone: (result: InvestigationDto) => void, onError: (error: Error) => void) {
+/*   create(payload: CreateInvestigationDto, onDone: (result: InvestigationDto) => void, onError: (error: Error) => void) {
     const mutation = useMutation(CREATE_INVESTIGATION);
     mutation.mutate({ payload: payload });
 
@@ -17,9 +20,9 @@ export default {
       err.message = "Investigation not created! - " + error.message;
       onError(err);
     })
-  },
+  }, */
 
-  fetch(onDone: (result: InvestigationDto[]) => void, onError: (error: Error) => void) {
+/*   fetch(onDone: (result: InvestigationDto[]) => void, onError: (error: Error) => void) {
     const query = useQuery(GET_INVESTIGATIONS, null, { fetchPolicy: 'network-only', });
 
     query.onResult(queryResult => {
@@ -31,9 +34,16 @@ export default {
       error.message = "Error in InvestigationService.fetch - " + err.message;
       onError(error);
     });
-  },
+  }, */
 
-  get(_id: string, onDone: (result: InvestigationDto) => void, onError: (error: Error) => void) {
+  async fetch(vars: Record<string, unknown> | undefined = undefined): Promise<InvestigationDto[] | undefined> {
+    const { $dQuery } = useNuxtApp();
+    const result = await $dQuery(FETCH_INVESTIGATIONS, vars);
+    console.log(">>> Investigation fetch result:", result);
+    return result ? result.investigations as InvestigationDto[] : undefined;
+  },  
+
+/*   get(_id: string, onDone: (result: InvestigationDto) => void, onError: (error: Error) => void) {
     const query = useQuery(GET_INVESTIGATION, { _id: _id }, { fetchPolicy: 'network-only', });
 
     query.onResult(queryResult => {
@@ -64,7 +74,7 @@ export default {
 
   update(id: string, inv: InvestigationDto) {
     return api().put(`investigations/${id}`, inv);
-  },
+  }, */
 
   /*  
     delete (id) {

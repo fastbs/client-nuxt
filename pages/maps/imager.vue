@@ -45,13 +45,6 @@
               <td style="width: 180px;">{{ clickPoint ? clickPoint.y : '' }}</td>
             </tr>
             <tr>
-              <td style="width: 25px;">Lat:</td>
-              <td style="width: 180px;">{{ clickPoint ? clickPoint.lat : '' }}</td>
-              <td style="width: 20px;"></td>
-              <td style="width: 25px;">Lng:</td>
-              <td style="width: 180px;">{{ clickPoint ? clickPoint.lng : '' }}</td>
-            </tr>
-            <tr>
               <td style="width: 25px;">Lat2:</td>
               <td style="width: 180px;">{{ clickPoint2 ? clickPoint2.lat : '' }}</td>
               <td style="width: 20px;"></td>

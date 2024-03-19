@@ -9,9 +9,10 @@
         <pDivider :pt="{ root: { class: 'mt-0' } }" />
 
         <pDataTable :value="tableData" dataKey="id" editMode="cell" @cell-edit-complete="onCellEditComplete($event)"
-            paginator :rows="10" v-model:selection="selected" :filters="filters" :rowsPerPageOptions="[2, 5, 10, 20, 50]"
-            tableClass="editable-cells-table" tableStyle="min-width: 50rem" showGridlines
-            :pt="{ row: { style: 'height: 58px; ' } }" :rowClass="rowClass" :loading="loading">
+            paginator :rows="10" v-model:selection="selected" :filters="filters"
+            :rowsPerPageOptions="[2, 5, 10, 20, 50]" tableClass="editable-cells-table"
+            :tableStyle="{ 'min-width': '50rem' }" showGridlines :pt="{ row: { style: 'height: 58px; ' } }"
+            :rowClass="rowClass" :loading="loading">
             <template #header>
                 <div class="flex justify-content-between">
                     <div>
@@ -27,7 +28,7 @@
                     </div>
                     <div>
                         <span class="p-input-icon-left">
-                            <i class="pi pi-search" />
+                            <i class="pi pi-search mr-2" />
                             <pInputText v-model="filters['global'].value" placeholder="Поиск..." />
                         </span>
                     </div>
@@ -47,7 +48,7 @@
         </pDataTable>
     </div>
 </template>
-  
+
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
 import type { DataTableCellEditCompleteEvent } from "primevue/datatable";

@@ -11,21 +11,25 @@
         <label for="company">Компании: </label>
 
         <pDropdown v-model="selectedCompany" :options="companies" optionLabel="name" optionValue="id"
-            placeholder="Выберите компанию" class="w-full lg:w-8 xl:w-6 mb-3" inputId="company" @change="changeCompany()" />
+            placeholder="Выберите компанию" class="w-full lg:w-8 xl:w-6 mb-3" inputId="company"
+            @change="changeCompany()" />
 
         <pDataTable :value="tableData" dataKey="id" editMode="cell" @cell-edit-complete="onCellEditComplete($event)"
-            paginator :rows="10" v-model:selection="selected" :filters="filters" :rowsPerPageOptions="[2, 5, 10, 20, 50]"
-            tableClass="editable-cells-table" tableStyle="min-width: 50rem" showGridlines
-            :pt="{ row: { style: 'height: 58px; ' } }" :rowClass="rowClass" :loading="loading">
+            paginator :rows="10" v-model:selection="selected" :filters="filters"
+            :rowsPerPageOptions="[2, 5, 10, 20, 50]" tableClass="editable-cells-table"
+            :tableStyle="{ 'min-width': '50rem' }" showGridlines :pt="{ row: { style: 'height: 58px; ' } }"
+            :rowClass="rowClass" :loading="loading">
 
             <template #header>
                 <div class="flex justify-content-between">
                     <div>
                         <pButton v-if="UsersService.checkPermission('jobtitles', 'create')" label="Добавить"
-                            icon="pi pi-plus" severity="success" class="mr-2" :disabled="disableCreate" @click="addData" />
+                            icon="pi pi-plus" severity="success" class="mr-2" :disabled="disableCreate"
+                            @click="addData" />
                         <pButton v-if="UsersService.checkPermission('jobtitles', 'delete')" label="Удалить"
-                            icon="pi pi-trash" severity="danger" :disabled="!selected || !selected.length || disableDelete"
-                            @click="deleteSelected()" class="mr-4" />
+                            icon="pi pi-trash" severity="danger"
+                            :disabled="!selected || !selected.length || disableDelete" @click="deleteSelected()"
+                            class="mr-4" />
                         <pButton
                             v-if="UsersService.checkPermission('jobtitles', 'create') || UsersService.checkPermission('jobtitles', 'delete') || UsersService.checkPermission('jobtitles', 'update')"
                             icon="pi pi-save" label="Сохранить изменения" :disabled="!dataChanged || !tableValid"
@@ -33,7 +37,7 @@
                     </div>
                     <div>
                         <span class="p-input-icon-left">
-                            <i class="pi pi-search" />
+                            <i class="pi pi-search mr-2" />
                             <pInputText v-model="filters['global'].value" placeholder="Поиск..." />
                         </span>
                     </div>
@@ -55,7 +59,7 @@
 
     </div>
 </template>
-  
+
 <script lang="ts" setup>
 import { FilterMatchMode } from 'primevue/api';
 import type { DataTableCellEditCompleteEvent } from "primevue/datatable";

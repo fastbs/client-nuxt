@@ -1,4 +1,6 @@
+import type { UserDto } from "./users.dto";
 import type { CompanyDto } from "./companies.dto";
+
 /* export class CreateInvestigationDto {
     title = "";
     description = "";
@@ -20,36 +22,36 @@ export class ContentBlockDto {
     children?: object[];
 } */
 
-export type CreateInvestigationDto = {
+export interface CreateInvestigationDto {
     title: string,
     description: string,
     company: CompanyDto; //string,
 };
 
-export type InvestigationDto = {
-    _id: string,
-    title: string,
-    description: string,
-    image: string,
-    content: object,
-    global_data: object,
-    current_node: string,
-    company: CompanyDto,
+export interface InvestigationDto {
+    id: number;
+    title: string;
+    description?: string;
+    image?: string;
+    state: object;
+    content: object;
+    company: CompanyDto;
+    user_created?: UserDto;
 };
 
-export type ContentBlockDto = {
-    _id: string,
-    name: string,
-    type: string,
-    is_ready: boolean,
-    data: object,
-    children?: object,
+export interface ContentBlockDto {
+    _id: string;
+    name: string;
+    type: string;
+    is_ready: boolean;
+    data: object;
+    children?: object;
 };
 
 
-export type Node = {
-    name: string,
-    path: string
+export interface Node {
+    name: string;
+    path: string;
  };
 
 //export type Employee = { _id?: string, name: string, name_short: string };

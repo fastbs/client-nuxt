@@ -368,3 +368,31 @@ export const DELETE_MAP_MARKERS = `
         }
     }`;
 
+// Investigation queries
+
+export const FETCH_INVESTIGATIONS = `
+query fetchInvs{
+    investigations(sort: "id"){
+      id
+      user_created{
+        id
+        first_name
+        email
+      }
+      title
+      description
+      company{
+        id
+        name
+      }
+      image{
+        id
+        filename_disk
+        filename_download
+        title
+        filesize
+      }
+      state
+      content
+    }
+  }`;

@@ -16,6 +16,12 @@ export default defineNuxtConfig({
   },
   devtools: { enabled: true },
   pages: true,
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false,
+    },
+  ],
   modules: ['@pinia/nuxt', 'nuxt-primevue', 'vue-yandex-maps/nuxt'],
   primevue: {
     usePrimeVue: true,
