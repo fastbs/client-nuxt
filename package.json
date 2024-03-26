@@ -31,6 +31,7 @@
     "@pinia/nuxt": "^0.5.1",
     "@vue/apollo-composable": "^4.0.1",
     "@vueup/vue-quill": "^1.2.0",
+    "angular-expressions": "^1.2.1",
     "apollo-link-error": "^1.1.13",
     "axios": "^1.6.7",
     "dayjs": "^1.11.10",

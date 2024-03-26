@@ -187,21 +187,24 @@ export const DELETE_COMPANIES = `
 // JobTitles queries
 
 export const FETCH_JOB_TITLES = `
-    query fetchJobTitles{
-        jobtitles(sort: "id"){
-            id
-            name
-            name_short
-            company{
+    query fetchJobTitles($filter: jobtitles_filter){
+        jobtitles(
+            filter: $filter
+            sort: "id"
+            ){    
                 id
                 name
+                name_short
+                company{
+                    id
+                    name
+                }
+                user_created {
+                    id
+                    first_name
+                    email
+                }
             }
-            user_created {
-                id
-                first_name
-                email
-            }
-        }
     }`;
 
 export const GET_JOB_TITLE = `
@@ -240,21 +243,24 @@ export const DELETE_JOB_TITLES = `
 // Employee queries
 
 export const FETCH_EMPLOYEES = `
-    query fetchEmployees{
-        employees(sort: "id"){
-            id
-            name
-            name_short
-            company{
+    query fetchEmployees($filter: employees_filter){
+        employees(
+            filter: $filter
+            sort: "id"
+            ){
                 id
                 name
+                name_short
+                company{
+                    id
+                    name
+                }
+                user_created {
+                    id
+                    first_name
+                    email
+                }
             }
-            user_created {
-                id
-                first_name
-                email
-            }
-        }
     }`;
 
 export const GET_EMPLOYEE = `
@@ -373,6 +379,33 @@ export const DELETE_MAP_MARKERS = `
 export const FETCH_INVESTIGATIONS = `
 query fetchInvs{
     investigations(sort: "id"){
+      id
+      user_created{
+        id
+        first_name
+        email
+      }
+      title
+      description
+      company{
+        id
+        name
+      }
+      image{
+        id
+        filename_disk
+        filename_download
+        title
+        filesize
+      }
+      state
+      content
+    }
+  }`;
+
+export const GET_INVESTIGATION = `
+query gethInv($id: ID!){
+    investigations_by_id(id: $id){
       id
       user_created{
         id

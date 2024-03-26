@@ -1,8 +1,8 @@
 <template>
     <div class="field grid mx-3 w-full" v-if="!loading">
-        <pDataTable :value="tableData" editMode="cell" @cell-edit-complete="onCellEditComplete($event)" paginator :rows="5"
-            v-model:selection="selected" :filters="filters" :rowsPerPageOptions="[2, 5, 10, 20, 50]" :rowClass="rowClass"
-            tableClass="editable-cells-table" showGridlines
+        <pDataTable :value="tableData" editMode="cell" @cell-edit-complete="onCellEditComplete($event)" paginator
+            :rows="5" v-model:selection="selected" :filters="filters" :rowsPerPageOptions="[2, 5, 10, 20, 50]"
+            :rowClass="rowClass" tableClass="editable-cells-table" showGridlines
             :pt="{ root: { class: 'flex-grow-1' }, row: { style: 'height: 58px; ' } }">
             <template #header>
                 <div class="flex justify-content-between">
@@ -24,10 +24,10 @@
                 :sortable="col.sortable" v-model:style="col.style">
                 <template #body="{ data, field }">
                     <template v-if="field == 'employee'">
-                        {{ data[field] ? employees.find(x => x._id === data[field])!.name : '' }}
+                        {{ data[field] ? employees.find(x => x.id === data[field])!.name : '' }}
                     </template>
                     <template v-if="field == 'job_title'">
-                        {{ data[field] ? jobTitles.find(x => x._id === data[field])!.name : '' }}
+                        {{ data[field] ? jobTitles.find(x => x.id === data[field])!.name : '' }}
                     </template>
                     <template v-if="field == 'starts_at' || field == 'ends_at'">
                         {{ dayjs(data[field]).format("DD.MM.YYYY") }}
@@ -39,16 +39,18 @@
                 <template #editor="{ data, field }">
                     <template v-if="field == 'employee'">
                         <div class="flex">
-                            <pDropdown v-model="data['employee']" :options="employees" optionLabel="name" optionValue="_id"
-                                placeholder="Выберите сотрудника" :pt="{ root: { class: 'flex flex-grow-1' } }"></pDropdown>
+                            <pDropdown v-model="data['employee']" :options="employees" optionLabel="name"
+                                optionValue="_id" placeholder="Выберите сотрудника"
+                                :pt="{ root: { class: 'flex flex-grow-1' } }"></pDropdown>
                             <pButton icon="pi pi-plus" severity="primary" v-tooltip.bottom="'Добавить сотрудника'"
                                 :pt="{ root: { class: 'flex ml-1' } }" @click="openAddEmployeeDialog(data)" />
                         </div>
                     </template>
                     <template v-if="field == 'job_title'">
                         <div class="flex">
-                            <pDropdown v-model="data['job_title']" :options="jobTitles" optionLabel="name" optionValue="_id"
-                                placeholder="Выберите должность" :pt="{ root: { class: 'flex flex-grow-1' } }">
+                            <pDropdown v-model="data['job_title']" :options="jobTitles" optionLabel="name"
+                                optionValue="_id" placeholder="Выберите должность"
+                                :pt="{ root: { class: 'flex flex-grow-1' } }">
                             </pDropdown>
                             <pButton icon="pi pi-plus" severity="primary" v-tooltip.bottom="'Добавить должность'"
                                 :pt="{ root: { class: 'flex ml-1' } }" @click="openAddJobTitleDialog(data)" />
@@ -77,7 +79,7 @@
                 <label for="title">Фамилия, имя, отчество:</label>
                 <pInputText id="modalName" v-model="modalName" type="text" :class="{ 'p-invalid': !modalNameState }" />
                 <small v-if="!modalNameState" class="p-error fadeinup animation-duration-200" id="text-error">{{
-                    invalidModalNameFeedback }}</small>
+        invalidModalNameFeedback }}</small>
             </div>
             <div class="field col-12">
                 <label for="description">Ф.И.О.:</label>
@@ -87,11 +89,12 @@
                             :class="{ 'p-invalid': !modalShortNameState }" />
                     </div>
                     <div class="flex">
-                        <pButton label="Заполнить" icon="pi pi-pencil" :disabled="!modalName" @click="fiilShortName()" />
+                        <pButton label="Заполнить" icon="pi pi-pencil" :disabled="!modalName"
+                            @click="fiilShortName()" />
                     </div>
                 </div>
                 <small v-if="!modalShortNameState" class="p-error fadeinup animation-duration-200" id="text-error">{{
-                    invalidModalShortNameFeedback }}</small>
+        invalidModalShortNameFeedback }}</small>
             </div>
             <div class="field col-12 mb-2">
                 <div class="flex gap-3">
@@ -110,14 +113,14 @@
                 <label for="title">Наименование должности:</label>
                 <pInputText id="modalName" v-model="modalName" type="text" :class="{ 'p-invalid': !modalNameState }" />
                 <small v-if="!modalNameState" class="p-error fadeinup animation-duration-200" id="text-error">{{
-                    invalidModalNameFeedback }}</small>
+        invalidModalNameFeedback }}</small>
             </div>
             <div class="field col-12">
                 <label for="description">Краткая форма:</label>
                 <pInputText id="modalShortName" v-model="modalShortName" type="text"
                     :class="{ 'p-invalid': !modalShortNameState }" />
                 <small v-if="!modalShortNameState" class="p-error fadeinup animation-duration-200" id="text-error">{{
-                    invalidModalShortNameFeedback }}</small>
+        invalidModalShortNameFeedback }}</small>
             </div>
             <div class="field col-12 mb-2">
                 <div class="flex gap-3">
@@ -132,35 +135,37 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, computed } from "vue";
-import { useRouter } from "vue-router";
-import { useToast } from "primevue/usetoast";
 import dayjs from "dayjs";
 import { FilterMatchMode } from 'primevue/api';
 import type { DataTableCellEditCompleteEvent } from "primevue/datatable";
 //import type { DropdownChangeEvent } from "primevue/dropdown";
 
-import { useMainStore } from "@/store/MainStore";
+import UsersService from "@/services/UsersService";
 import EmployeesService from "@/services/EmployeesService";
 import JobTitlesService from "@/services/JobTitlesService";
 import type { EmployeeDto } from "@/services/dto/employees.dto";
 import type { JobTitleDto } from "@/services/dto/jobtitles.dto";
-import type { EmployeesTableItemDto } from "../dto/employees.dto";
+import type { EmployeesTableItemDto } from "@/services/dto/employees.dto";
 
-
+/*
 const props = defineProps({
     modelValue: Array,
     company: String,
     readyState: Boolean,
 });
+*/
 
 const emit = defineEmits(['update:modelValue', 'update:readyState']);
 
-
-const router = useRouter();
-const toast = useToast();
-
 const store = useMainStore();
+const route = useRoute();
+const router = useRouter();
+const confirm = useConfirm();
+const { $toast } = useNuxtApp();
+
+let company = 0;
+const modelValue  = defineModel<EmployeesTableItemDto[]>();
+const readyState = defineModel<boolean>("readyState");
 const loadEmployees = ref(false);
 const loadJobTitles = ref(false);
 const employees = ref<EmployeeDto[]>([]);
@@ -188,14 +193,14 @@ const invalidModalNameFeedback = computed(() => {
 const invalidModalShortNameFeedback = computed(() => "Минимум 5 символов");
 const modalShortNameState = computed(() => modalShortName.value.length >= 5 ? true : false);
 const modalState = computed(() => modalNameState.value && modalShortNameState.value);
-const readyState = computed({
+/* const readyState = computed({
     get() {
-        return props.readyState
+        return Boolean(route.params.readyState);
     },
     set(value) {
-        emit('update:readyState', value)
+        emit('update:readyState', value);
     }
-});
+}); */
 const rowClass = (data: EmployeesTableItemDto) => {
     return [{ 'bg-red-100': Object.values(data).some(x => !x) }];
 };
@@ -231,9 +236,9 @@ const onCellEditComplete = (event: DataTableCellEditCompleteEvent) => {
         switch (field) {
             case 'starts_at':
                 if (!newValue) {
-                    toast.add({ severity: 'error', summary: 'Некорректный ввод', detail: "Неверная дата!", life: 5000 });
+                    $toast.warn("Некорректный ввод - Неверная дата!");
                 } else if (newValue > data['ends_at']) {
-                    toast.add({ severity: 'error', summary: 'Некорректный ввод', detail: "Дата начала полномочий позже даты окончания!", life: 5000 });
+                    $toast.warn("Некорректный ввод - Дата начала полномочий позже даты окончания!");
                 } else {
                     data[field] = newValue;
                     dataChanged.value = true;
@@ -241,9 +246,9 @@ const onCellEditComplete = (event: DataTableCellEditCompleteEvent) => {
                 break;
             case 'ends_at':
                 if (!newValue) {
-                    toast.add({ severity: 'error', summary: 'Некорректный ввод', detail: "Неверная дата!", life: 5000 });
+                    $toast.warn("Некорректный ввод - Неверная дата!");
                 } else if (newValue < data['starts_at']) {
-                    toast.add({ severity: 'error', summary: 'Некорректный ввод', detail: "Дата окончания полномочий раньше даты начала!", life: 5000 });
+                    $toast.warn("Некорректный ввод - Дата окончания полномочий раньше даты начала!");
                 } else {
                     data[field] = newValue;
                     dataChanged.value = true;
@@ -315,17 +320,17 @@ const fiilShortName = async () => {
 }
 
 const createEmployee = async () => {
-    const response = await EmployeesService.create({ name: modalName.value, name_short: modalShortName.value, company: { _id: props.company as string } });
+    const response = await EmployeesService.create({ name: modalName.value, name_short: modalShortName.value, company: company });
     if (response) {
-        loadData(response._id as string);
+        loadData(response.id);
         showEmployeeModal.value = false;
     }
 };
 
 const createJobTitle = async () => {
-    const response = await JobTitlesService.create({ name: modalName.value, name_short: modalShortName.value, company: { _id: props.company as string } });
+    const response = await JobTitlesService.create({ name: modalName.value, name_short: modalShortName.value, company: company });
     if (response) {
-        loadData("");
+        loadData(0);
         showJobTitleModal.value = false;
     }
 };
@@ -333,8 +338,8 @@ const createJobTitle = async () => {
 const decodeDirectors = () => {
     tableData.value = [];
 
-    if (props.modelValue) {
-        tableData.value = props.modelValue as EmployeesTableItemDto[];
+    if (modelValue) {
+        tableData.value = modelValue.value; // as EmployeesTableItemDto[];
         readyState.value = true;
         //emit('update:readyState', true);
         /*         let ds = props.modelValue as EmployeeField[];
@@ -362,15 +367,31 @@ const decodeDirectors = () => {
     }
 };
 
-const loadData = async (ps: string) => {
-    const res1 = await EmployeesService.fetch({ company: { _id: props.company as string } });
+const loadData = async (ps: number) => {
+    const res1 = await EmployeesService.fetch({
+        "filter": {
+            "company": {
+                "id": {
+                    "_eq": company
+                }
+            }
+        }
+    });
     if (res1) {
-        employees.value = res1.employees;
+        employees.value = res1;
         loadEmployees.value = true;
     }
-    const res2 = await JobTitlesService.fetch({ company: { _id: props.company as string } });
+    const res2 = await JobTitlesService.fetch({
+        "filter": {
+            "company": {
+                "id": {
+                    "_eq": company
+                }
+            }
+        }
+    });
     if (res2) {
-        jobTitles.value = res2.jobTitles;
+        jobTitles.value = res2;
         loadJobTitles.value = true;
     }
 
@@ -379,11 +400,15 @@ const loadData = async (ps: string) => {
 };
 
 onMounted(async () => {
-    if (store.checkPermission("investigations", "post")) {
-        loadData("") //props.modelValue as string);
+    if (UsersService.checkPermission("investigations", "update")) {
+        company = Number(route.params.company);
+        //modelValue = route.params.modelValue as EmployeesTableItemDto[];
+        //readyState = Boolean(route.params.readyState);
+
+        loadData(0) //props.modelValue as string);
     } else {
-        toast.add({ severity: 'error', summary: 'Ошибка', detail: "Доступ запрещен!", life: 5000 });
-        router.push({ name: "Home" });
+        $toast.errors(new Error("Доступ запрещен - EmployeesTable!"));
+        router.push({ name: "index" });
     }
 });
 

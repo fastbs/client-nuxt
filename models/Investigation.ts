@@ -1,24 +1,23 @@
 import objectPath from "object-path";
 import { toRaw } from "vue";
-//import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 
 import type { CreateInvestigationDto, InvestigationDto, ContentBlockDto } from "@/services/dto/investigations.dto";
 import type { Node } from "@/services/dto/investigations.dto";
-import type { EmployeeDto, ListEmployeeDto } from "@/services/dto/employees.dto"
+//import type { EmployeeDto, ListEmployeeDto } from "@/services/dto/employees.dto"
 import InvestigationsService from "@/services/InvestigationsService";
 import EmployeesService from "@/services/EmployeesService";
 
 export class Investigation {
     source: InvestigationDto = {
-        _id: "",
+        id: 0,
         title: "",
-        description: "",
-        image: "",
         content: {},
-        global_data: {},
         current_node: "",
+        state: {
+        },
         company: {
+            id: 0,
             name: "",
             name_short: "",
             inn: "",
@@ -28,7 +27,7 @@ export class Investigation {
     private _currentNode = "";
     private _currentComponent = "";
     private _currentBlock: ContentBlockDto = {
-        _id: "",
+        id: "",
         name: "",
         type: "",
         is_ready: false,
@@ -37,8 +36,8 @@ export class Investigation {
     };
 
     constructor() {
-//        console.log("CONSTRUCTOR >>>>>")
-//        console.log("   this.source:", this.source);
+        //        console.log("CONSTRUCTOR >>>>>")
+        //        console.log("   this.source:", this.source);
     }
 
     /*     async create(inv: CreateInvestigationDto, onDone: () => void, onError: (err: Error) => void) { // : Promise<boolean> {
@@ -61,43 +60,34 @@ export class Investigation {
                 });
         } */
 
-    load(_id: string, onDone: (result: InvestigationDto) => void, onError: (error: Error) => void) {
-        InvestigationsService.get(_id,
-            result => {
-                this.source = structuredClone(result);
-                console.log("this.source ", this.source)
-                if (this.setCurrentNode(this.source.current_node)) {
-                    this.isReady = true;
-                    onDone(this.source);
-                } else {
-                    const error = new Error;
-                    error.message = "Wrong current node!";
-                    onError(error);
-                }
-            },
-            error => {
-                onError(error);
-            });
+    async load(id: number) {
+        let result = await InvestigationsService.get(id);
+        if (result) {
+            this.source = structuredClone(result);
+            console.log("this.source ", this.source)
+            if (this.setCurrentNode(this.source.state.current_node)) {
+                this.isReady = true;
+            } else {
+                const error = new Error;
+                error.message = "Wrong current node!";
+                throw (error);
+            }
+        }
+        return result;
     }
 
-    save2(onDone: (result: InvestigationDto) => void, onError: (error: Error) => void) {
+    async save() {
         if (this.isReady) {
-            InvestigationsService.update2(this.source,
-                result => {
-                    onDone(result);
-                },
-                error => {
-                    onError(error);
-                });
+            return await InvestigationsService.update(this.source.id, this.source);
         }
         else {
             const error = new Error;
             error.message = "Investigation not ready!";
-            onError(error);
+            throw(error);
         }
     }
 
-    async save(): Promise<boolean> {
+/*     async save(): Promise<boolean> {
         let result = false;
         try {
             if (this.isReady) {
@@ -111,7 +101,7 @@ export class Investigation {
             console.error("Error in Investigation -> save: ", (err instanceof Error) ? err.message : "",);
         }
         return result;
-    }
+    } */
 
     get currentNode(): string {
         return this._currentNode;
@@ -129,6 +119,7 @@ export class Investigation {
         let result = false;
         if (cn == "" || objectPath.has(this.source.content, cn)) {
             this._currentNode = cn;
+            console.log("_currentNode:", this._currentNode);
             this.source.current_node = cn;
             this._currentComponent = objectPath.get(this.source.content, cn).type;
             this._currentBlock = structuredClone(toRaw(objectPath.get(this.source.content, cn)));
@@ -201,7 +192,7 @@ export class Investigation {
         const cns = this.getChildNodes();
         if (!cns) {
             const nn: ContentBlockDto = {
-                _id: uuidv4(),
+                id: uuidv4(),
                 type: nodeType,
                 is_ready: false,
                 name: "",
@@ -239,17 +230,5 @@ export class Investigation {
         return true;
     }
 
-    /*     // *** ШЛЯПА ??? ***
-        async getEmployees(): Promise<Array<EmployeeDto> | null> {
-            const query = await EmployeesService.fetch(<ListEmployeeDto>{ company: { _id: this.source.company._id } }); //this.source.company._id as string);
-    
-            query.onResult(queryResult => {
-                if (queryResult.data) {
-                    return <EmployeeDto[]>structuredClone(queryResult.data.employees);
-                }
-            });
-    
-            return null;
-        } */
 }
 

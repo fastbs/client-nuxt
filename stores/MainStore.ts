@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 
 import { socket } from "@/services/socket";
 import type { UserDto, PermissionDto } from "@/services/dto/users.dto";
-//import { Investigation } from "@/models/Investigation";
+import { Investigation } from "@/models/Investigation";
 
 export const useMainStore = defineStore("main", {
   state: () => ({
@@ -18,7 +18,7 @@ export const useMainStore = defineStore("main", {
     user: <UserDto | undefined>undefined,
     permissions: <PermissionDto[] | undefined>undefined,
 
-    //Inv: new Investigation,
+    //Inv: new Investigation(),
     basis: [
       {
         name: "Устав",

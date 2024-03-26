@@ -2,9 +2,8 @@
     <div class="field grid" v-if="!loading">
         <div class="flex w-full gap-3">
             <div class="flex flex-grow-1">
-                <pDropdown v-model="employeeSelected" :options="employees" optionLabel="name" optionValue="_id"
+                <pDropdown v-model="employeeSelected" :options="employees" optionLabel="name" optionValue="id"
                     placeholder="Выберите сотрудника" class="w-full" inputId="employee" @change="inputEvent($event)" />
-                <!-- $emit('update:modelValue', $event)    inputEvent($event) -->
             </div>
             <div class="flex mr-3">
                 <pButton icon="pi pi-plus" severity="primary" v-tooltip.bottom="'Добавить сотрудника'"
@@ -21,7 +20,7 @@
                 <label for="title">Фамилия, имя, отчество:</label>
                 <pInputText id="modalName" v-model="modalName" type="text" :class="{ 'p-invalid': !modalNameState }" />
                 <small v-if="!modalNameState" class="p-error fadeinup animation-duration-200" id="text-error">{{
-                    invalidModalNameFeedback }}</small>
+        invalidModalNameFeedback }}</small>
             </div>
             <div class="field col-12">
                 <label for="description">Ф.И.О.:</label>
@@ -31,11 +30,12 @@
                             :class="{ 'p-invalid': !modalShortNameState }" />
                     </div>
                     <div class="flex">
-                        <pButton label="Заполнить" icon="pi pi-pencil" :disabled="!modalName" @click="fiilShortName()" />
+                        <pButton label="Заполнить" icon="pi pi-pencil" :disabled="!modalName"
+                            @click="fillShortName()" />
                     </div>
                 </div>
                 <small v-if="!modalShortNameState" class="p-error fadeinup animation-duration-200" id="text-error">{{
-                    invalidModalShortNameFeedback }}</small>
+        invalidModalShortNameFeedback }}</small>
             </div>
             <div class="field col-12 mb-2">
                 <div class="flex gap-3">
@@ -50,25 +50,19 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, computed, watch } from "vue";
-import { useRouter } from "vue-router";
-import { useToast } from "primevue/usetoast";
 import type { DropdownChangeEvent } from "primevue/dropdown";
 
-import { useMainStore } from "@/store/MainStore";
+import UsersService from "@/services/UsersService";
 import EmployeesService from "@/services/EmployeesService";
 import type { EmployeeDto } from "@/services/dto/employees.dto";
 
-const props = defineProps({
-    modelValue: String,
-    company: String,
-});
-
-const emit = defineEmits(['update:modelValue']);
-
-const store = useMainStore();
 const router = useRouter();
-const toast = useToast();
+const { $toast } = useNuxtApp();
+
+const modelValue = defineModel<string>({ type: String, required: true });
+const props = defineProps({
+    company: { type: Number, required: true },
+});
 
 const loading = ref(true);
 const employees = ref<EmployeeDto[]>();
@@ -77,7 +71,6 @@ const showModal = ref(false);
 const modalName = ref("");
 const modalShortName = ref("");
 const duplicate = ref(false);
-let lastSelected = "";
 
 const validState = computed(() => (employeeSelected.value ? true : false));
 const modalNameState = computed(() => modalName.value.length >= 5 && !duplicate.value);
@@ -93,7 +86,7 @@ watch(modalName, (modalName) => {
     duplicate.value = false;
 });
 
-const fiilShortName = async () => {
+const fillShortName = async () => {
     let sp = modalName.value.split(" ");
     let sn = "";
     if (sp[0]) {
@@ -109,26 +102,30 @@ const fiilShortName = async () => {
 }
 
 const createEmployee = async () => {
-    const response = await EmployeesService.create({ name: modalName.value, name_short: modalShortName.value, company: { _id: props.company as string } });
+    const response = await EmployeesService.create(
+        {
+            name: modalName.value,
+            name_short: modalShortName.value,
+            company: props.company
+        });
     if (response) {
-        loadEmployees(response._id);
+        loadEmployees(String(response.id));
+        modelValue.value = String(response.id);
         showModal.value = false;
     }
 };
 
-const loadEmployees = async (_id: string) => {
-    const response = await EmployeesService.fetch({ company: { _id: props.company as string } });
+const loadEmployees = async (id: string) => {
+    const response = await EmployeesService.fetch({ "filter": { "company": { "id": { "_eq": props.company } } } });
     if (response) {
-        employees.value = response.employees;
-        lastSelected = props.modelValue as string;
-        employeeSelected.value = _id;
+        employees.value = response;
+        employeeSelected.value = String(id);
         loading.value = false;
     }
 };
 
 const inputEvent = (event: DropdownChangeEvent) => {
-    lastSelected = event.value;
-    emit('update:modelValue', lastSelected);
+    modelValue.value = event.value;
 };
 
 const openAddDialog = async () => {
@@ -139,11 +136,11 @@ const openAddDialog = async () => {
 
 
 onMounted(async () => {
-    if (store.checkPermission("investigations", "post")) {
-        loadEmployees(props.modelValue as string);
+    if (UsersService.checkPermission("investigations", "update")) {
+        loadEmployees(modelValue.value);
     } else {
-        toast.add({ severity: 'error', summary: 'Ошибка', detail: "Доступ запрещен!", life: 5000 });
-        router.push({ name: "Home" });
+        $toast.errors(new Error("Доступ запрещен - EmployeeSelect!"));
+        router.push({ name: "index" });
     }
 });
 
@@ -158,4 +155,4 @@ onMounted(async () => {
 .input-group-text.is-invalid {
     border-color: #dc3545;
 }
-</style>@/services/dto/auth.dto@/services/dto/employees.dto
+</style>

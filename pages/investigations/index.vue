@@ -32,10 +32,10 @@
                                     <div class="text-2xl font-bold text-900">{{ item.title }}</div>
                                     <div class="flex align-items-center gap-3"></div>
                                     <div class="flex align-items-center gap-3">
-                                        <router-link v-if="UsersService.checkPermission('investigations', 'read')"
-                                            :to="{ name: 'InvestigationView', params: { id: item.id } }">
+                                        <NuxtLink v-if="UsersService.checkPermission('investigations', 'read')"
+                                            :to="{ name: 'investigations-id', params: { id: item.id } }">
                                             <pButton label="Просмотр" />
-                                        </router-link>
+                                        </NuxtLink>
                                     </div>
                                 </div>
                                 <div class="flex sm:flex-column align-items-center sm:align-items-end gap-3 sm:gap-2">
@@ -58,10 +58,10 @@
                                 <div class="text-2xl font-bold">{{ item.title }}</div>
                                 <div> Компания: {{ item.company.name }}</div>
                                 <div class="flex gap-3">
-                                    <router-link v-if="UsersService.checkPermission('investigations', 'read')"
-                                        :to="{ name: 'InvestigationView', params: { id: item.id } }">
+                                    <NuxtLink v-if="UsersService.checkPermission('investigations', 'update')"
+                                        :to="{ name: 'investigations-id', params: { id: item.id } }">
                                         <pButton label="Просмотр" />
-                                    </router-link>
+                                    </NuxtLink>
                                 </div>
                             </div>
                             <div class="flex align-items-center gap-3">

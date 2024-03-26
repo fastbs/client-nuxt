@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@vue/apollo-composable";
 
 import { createItem, updateItem } from '@directus/sdk';
 import type { CreateInvestigationDto, InvestigationDto } from "./dto/investigations.dto";
-import { FETCH_INVESTIGATIONS } from "./queries/DirectusQueries";
+import { FETCH_INVESTIGATIONS, GET_INVESTIGATION } from "./queries/DirectusQueries";
 
 export default {
 /*   create(payload: CreateInvestigationDto, onDone: (result: InvestigationDto) => void, onError: (error: Error) => void) {
@@ -22,19 +22,11 @@ export default {
     })
   }, */
 
-/*   fetch(onDone: (result: InvestigationDto[]) => void, onError: (error: Error) => void) {
-    const query = useQuery(GET_INVESTIGATIONS, null, { fetchPolicy: 'network-only', });
-
-    query.onResult(queryResult => {
-      onDone(queryResult.data.investigations);
-    });
-
-    query.onError(err => {
-      const error = new Error;
-      error.message = "Error in InvestigationService.fetch - " + err.message;
-      onError(error);
-    });
-  }, */
+  async create(data: CreateInvestigationDto): Promise<InvestigationDto | undefined> {
+    const { $directus } = useNuxtApp();
+    const result = await $directus.request(createItem('investigations', data));
+    return result as InvestigationDto;
+  },
 
   async fetch(vars: Record<string, unknown> | undefined = undefined): Promise<InvestigationDto[] | undefined> {
     const { $dQuery } = useNuxtApp();
@@ -43,20 +35,19 @@ export default {
     return result ? result.investigations as InvestigationDto[] : undefined;
   },  
 
-/*   get(_id: string, onDone: (result: InvestigationDto) => void, onError: (error: Error) => void) {
-    const query = useQuery(GET_INVESTIGATION, { _id: _id }, { fetchPolicy: 'network-only', });
-
-    query.onResult(queryResult => {
-      onDone(queryResult.data.investigation);
-    });
-
-    query.onError(err => {
-      const error = new Error;
-      error.message = "Error in InvestigationService.get - " + err.message;
-      onError(error);
-    });
+  async get(id: number): Promise<InvestigationDto | undefined> {
+    const { $dQuery } = useNuxtApp();
+    const result = await $dQuery(GET_INVESTIGATION, { id: id });
+    return result ? result.investigations_by_id as InvestigationDto : undefined;
   },
 
+  async update(id: number, data: InvestigationDto): Promise<InvestigationDto | undefined> {
+    const { $directus } = useNuxtApp();
+    const result = await $directus.request(updateItem('investigations', id, data));
+    return result as InvestigationDto;
+  },  
+
+  /*
   update2(payload: InvestigationDto, onDone: (result: InvestigationDto) => void, onError: (error: Error) => void) {
     const mutation = useMutation(UPDATE_INVESTIGATION);
     mutation.mutate({ payload: payload });

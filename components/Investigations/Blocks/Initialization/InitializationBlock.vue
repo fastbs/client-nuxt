@@ -28,18 +28,19 @@
                     <div v-if="!dc.data.is_periodic" class="field grid">
                         <label for="director" class="col-12 mt-2 mb-2"><strong>Руководитель компании:</strong></label>
                         <div class="col-12 pl-5">
-                            <EmployeeSelect v-model="dc.data.director.employee" :company="store.Inv.source.company._id"
+                            <EmployeeSelect v-model="dc.data.director.employee" :company="Inv.source.company.id"
                                 id="director" />
                         </div>
 
                         <label for="directorJobTitle" class="col-12 mt-1 mb-2"><strong>Должность руководителя
                                 компании:</strong></label>
                         <div class="col-12 pl-5">
-                            <JobTitleSelect v-model="dc.data.director.job_title" :company="store.Inv.source.company._id"
+                            <JobTitleSelect v-model="dc.data.director.job_title" :company="Inv.source.company.id"
                                 id="directorJobTitle" />
                         </div>
 
-                        <label for="directorBasis" class="col-12 mt-1 mb-2"><strong>Основания полномочий:</strong></label>
+                        <label for="directorBasis" class="col-12 mt-1 mb-2"><strong>Основания
+                                полномочий:</strong></label>
                         <div class="ml-3 mb-2">
                             <pButton v-for="(item, index) in store.basis" :key="index" class="mr-1" size="small"
                                 severity="secondary" outlined @click="dc.data.director.basis = item.text"
@@ -54,59 +55,55 @@
                     </div>
 
                     <div v-if="dc.data.is_periodic" class="field grid">
-                        <EmployeesTable v-model="dc.data.directors" :company="store.Inv.source.company._id"
+                        <EmployeesTable v-model="dc.data.directors" :company="Inv.source.company.id"
                             v-model:readyState="employeesTableReadyState" id="directorsTable" />
                     </div>
 
                 </div>
             </template>
         </pCard>
+        <div>
+            <pre> {{ JSON.stringify(dc, null, 2) }}</pre>
+        </div>
     </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, computed } from "vue";
 import find from "lodash/find"
-import { useRouter } from "vue-router";
-import { useConfirm } from "primevue/useconfirm";
-import { useToast } from "primevue/usetoast";
 import dayjs from "dayjs";
 import "dayjs/locale/ru.js";
 import { saveAs } from 'file-saver';
 //import { ConvertToPdf } from "docx2pdfmaker"; 
 
-import { useMainStore } from "@/store/MainStore";
+import UsersService from "@/services/UsersService";
 import EmployeesService from "@/services/EmployeesService";
 import JobTitlesService from "@/services/JobTitlesService";
+import type { ContentBlockDto } from "@/services/dto/investigations.dto";
 import type { EmployeeDto } from "@/services/dto/employees.dto";
 import type { JobTitleDto } from "@/services/dto/jobtitles.dto";
-import EmployeeSelect from "../../Inputs/EmployeeSelect.vue";
-import JobTitleSelect from "../../Inputs/JobTitleSelect.vue";
-import EmployeesTable from "../../Inputs/EmployeesTable.vue";
-import type { EmployeesTableItemDto } from "../../dto/employees.dto";
+import type { EmployeesTableItemDto } from "@/services/dto/employees.dto";
 
 import { exportDocx } from "@/utils/exportDocx.js";
-
-const props = defineProps({
-    id: {
-        type: String,
-        data: Object,
-    },
-});
+import { Investigation } from "@/models/Investigation";
 
 const emit = defineEmits(["block-action"]);
 
-
 const store = useMainStore();
+const route = useRoute();
 const router = useRouter();
-const toast = useToast();
+const confirm = useConfirm();
+const { $toast } = useNuxtApp();
+
+let invModel = defineModel<Investigation>("Inv", { type: Investigation, required: true });
+let Inv = new Investigation();
+//let Inv: Investigation = invModel.value;
+const dc = ref<ContentBlockDto>(Inv.currentBlock);
+
 const employees = ref<EmployeeDto[]>();
 const jobTitles = ref<JobTitleDto[]>();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const dc = ref<any>();
 const loading = ref(true);
 const employeesTableReadyState = ref(false);
-const dcSwitch = ref(true);
+
 const bmenu = ref<object[]>([
     { label: "Сохранить в PDF", command: () => { createReport("pdf"); }, },
     { label: "Сохранить в Word", command: () => { createReport("docx"); }, }
@@ -127,33 +124,44 @@ const formState = computed(() => {
     }
 });
 
-const loadData = async () => {
-    let ret = false;
-
-    const resEmployees = await EmployeesService.fetch({ company: { _id: store.Inv.source.company._id as string } });
-    if (resEmployees) {
-        employees.value = resEmployees.employees;
-        const resJobTitles = await JobTitlesService.fetch({ company: { _id: store.Inv.source.company._id as string } });
-        if (resJobTitles) {
-            jobTitles.value = resJobTitles.jobTitles;
-            ret = true;
-        }
-    }
-
-    return ret;
-};
-
 onMounted(async () => {
-    dc.value = store.Inv.currentBlock;
-    if (await loadData()) {
-        loading.value = false;
+    console.log(">>> Enter InitializationBlock - onMounted");
+
+    if (UsersService.checkPermission("investigations", "update")) {
+        if (invModel.value) {
+            Inv = invModel.value;
+            dc.value = Inv.currentBlock; //store.Inv.currentBlock;
+            if (await loadData()) {
+                loading.value = false;
+            } else {
+                $toast.errors(new Error("Ошибка загрузки данных - InitializationBlock!"));
+                router.push({ name: "index" });
+            }
+        } else {
+            $toast.errors(new Error("Объект Investigation не содержит данных!"));
+            router.push({ name: "index" });
+        }
     } else {
-        router.push({ name: "Home" });
+        $toast.errors(new Error("Доступ запрещен - InitializationBlock!"));
+        router.push({ name: "index" });
     }
 });
 
+const loadData = async () => {
+    const resEmployees = await EmployeesService.fetch({ "filter": { "company": { "id": { "_eq": Inv.source.company.id } } } });
+    const resJobTitles = await JobTitlesService.fetch({ "filter": { "company": { "id": { "_eq": Inv.source.company.id } } } });
+
+    if (resEmployees && resJobTitles) {
+        employees.value = resEmployees;
+        jobTitles.value = resJobTitles;
+        return true;
+    }
+
+    return false;
+};
+
 const finishBlock = async () => {
-    store.Inv.updateCurrentBlock(dc.value.data);
+    Inv.updateCurrentBlock(dc.value.data);
     emit("block-action", { p1: "Next block", p2: "FixationBlock" });
 };
 
@@ -195,8 +203,8 @@ const createReport = async (format: string) => {
         reportTitle: dc.value.name as string,
         reportTime: dayjs().format("DD.MM.YYYY HH:mm:ss"),
 
-        companyName: store.Inv.source.company.name,
-        investigationTitle: store.Inv.source.title,
+        companyName: Inv.source.company.name,
+        investigationTitle: Inv.source.title,
         is_periodic: dc.value.data.is_periodic as boolean, // ? 1 : 0,
         director: director,
         directors: directors,
@@ -218,7 +226,7 @@ const createReport = async (format: string) => {
     console.log("data: ", data);
 
     if (format == "docx") {
-        exportDocx("/reports/InitializationBlock.docx", data, `Report - ${store.Inv.source.title} - ${dc.value.name}.docx`);
+        exportDocx("/reports/InitializationBlock.docx", data, `Report - ${Inv.source.title} - ${dc.value.name}.docx`);
     } else if (format == "pdf") {
         let doc = await exportDocx("/template.docx", data);
         console.log(">>>>> doc: ", doc);

@@ -20,29 +20,29 @@
                 </div>
             </template>
         </pCard>
+        <div>
+            <pre> {{ JSON.stringify(dc, null, 2) }}</pre>
+        </div>
     </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted } from "vue";
+import UsersService from "@/services/UsersService";
+import type { ContentBlockDto } from "@/services/dto/investigations.dto";
 
-import { useMainStore } from "@/store/MainStore";
+import { Investigation } from "@/models/Investigation";
 
-
-const props = defineProps({
-    id: {
-        type: String,
-        data: Object,
-    },
-});
 const emit = defineEmits(["block-action"]);
 
+const router = useRouter();
+const { $toast } = useNuxtApp();
 
-const store = useMainStore();
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const dc = ref<any>();
+let invModel = defineModel<Investigation>("Inv", { type: Investigation, required: true });
+let Inv = new Investigation();
+//let Inv: Investigation = invModel.value;
+const dc = ref<ContentBlockDto>(Inv.currentBlock);
+
 const loading = ref(true);
-
 
 const formState = computed(() => {
     return true;
@@ -50,13 +50,27 @@ const formState = computed(() => {
 
 
 onMounted(async () => {
-    dc.value = store.Inv.currentBlock;
-    loading.value = false;
+    console.log(">>> Enter BossAcceptBlock - onMounted");
+
+    if (UsersService.checkPermission("investigations", "update")) {
+        if (invModel.value) {
+            Inv = invModel.value;
+            dc.value = Inv.currentBlock; //store.Inv.currentBlock;
+            loading.value = false;
+        } else {
+            $toast.errors(new Error("Объект Investigation не содержит данных!"));
+            router.push({ name: "index" });
+        }
+    } else {
+        $toast.errors(new Error("Доступ запрещен - BossAcceptBlock!"));
+        router.push({ name: "index" });
+    }
+
 });
 
 const finishBlock = async () => {
-    store.Inv.updateCurrentBlock(dc.value.data);
-    //emit("block-action", { p1: "Next block", p2: "" });
+    Inv.updateCurrentBlock(dc.value.data);
+    //emit("block-action", { p1: "Next block", p2: "BossAcceptBlock" });
 };
 
 

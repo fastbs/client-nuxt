@@ -23,7 +23,7 @@
           <div class="p-fluid formgrid grid">
             <div class="field col-12">
               <label for="company">Компания: </label>
-              <pDropdown v-model="inv.company._id" :options="companies" optionLabel="name" optionValue="_id"
+              <pDropdown v-model="inv.company.id" :options="companies" optionLabel="name" optionValue="id"
                 placeholder="Выберите компанию" :class="{ 'p-invalid': !companyState }" inputId="company" />
               <small v-if="!companyState" class="p-error fadeinup animation-duration-200" id="text-error">Необходимо
                 выбрать компанию</small>
@@ -49,14 +49,9 @@
     </div>
   </div>
 </template>
-  
-<script lang="ts" setup>
-import { ref, reactive, computed, onBeforeMount } from "vue";
-import { useRouter } from "vue-router";
-import { useConfirm } from "primevue/useconfirm";
-import { useToast } from "primevue/usetoast";
 
-import { useMainStore } from "@/store/MainStore";
+<script lang="ts" setup>
+import UsersService from "@/services/UsersService";
 import CompaniesService from "@/services/CompaniesService";
 import InvestigationsService from "@/services/InvestigationsService";
 import type { CompanyDto } from "@/services/dto/companies.dto";
@@ -64,55 +59,47 @@ import type { CreateInvestigationDto } from "@/services/dto/investigations.dto";
 
 
 const store = useMainStore();
+const route = useRoute();
 const router = useRouter();
-const toast = useToast();
+const confirm = useConfirm();
+const { $toast } = useNuxtApp();
 
-const inv = reactive<CreateInvestigationDto>({ title: "", description: "", company: { _id: "" } });
+const inv = reactive<CreateInvestigationDto>({ title: "", description: "", company: { id: 0 } });
 const loading = ref(true);
 const companies = ref<CompanyDto[]>();
 
-const companyState = computed(() => (inv.company._id ? true : false));
+const companyState = computed(() => (inv.company.id ? true : false));
 const titleState = computed(() => (inv.title.length >= 5));
 const descriptionState = computed(() => (inv.description.length >= 5));
-const formState = computed(() => (titleState.value && descriptionState.value));
+const formState = computed(() => (companyState.value && titleState.value && descriptionState.value));
 
 
 const addInvestigation = async () => {
   if (formState) {
-    InvestigationsService.create(inv,
-      result => {
-        router.push({ name: "InvestigationView", params: { id: result._id } });
-        toast.add({ severity: 'success', summary: 'Подтверждено', detail: 'Создано новое расследование', life: 5000 });
-      },
-      error => {
-        toast.add({ severity: 'error', summary: 'Ошибка', detail: error.message, life: 5000 });
-        router.push({ name: "Home" });
-      }
-    );
+    const response = await InvestigationsService.create(inv);
+    if (response) {
+      $toast.success("Создано новое расследование");
+      router.push({ name: "investigations" });
+    }
   }
 };
 
 onBeforeMount(async () => {
-  if (store.checkPermission("investigations", "post")) {
-    CompaniesService.fetch(
-      result => {
-        companies.value = result;
-        loading.value = false;
-      },
-      error => {
-        toast.add({ severity: 'error', summary: 'Ошибка', detail: error.message, life: 5000 });
-        router.push({ name: "Home" });
-      }
-    );
+  if (UsersService.checkPermission("investigations", "create")) {
+    const result = await CompaniesService.fetch();
+    if (result) {
+      companies.value = result;
+      loading.value = false;
+    }
   } else {
-    toast.add({ severity: 'error', summary: 'Ошибка', detail: "Доступ запрещен!", life: 5000 });
-    router.push({ name: "Home" });
+    $toast.errors(new Error("Доступ запрещен!"));
+    router.push({ name: "index" });
   }
 });
 
 
 </script>
-  
+
 <style scoped>
 .hide {
   position: absolute;
