@@ -30,7 +30,7 @@ export default {
             }
           `, { "data": data }, "system"); */
     const result = await $directus.request(createUser(user));
-    console.log("created user: ", result);
+    //console.log("created user: ", result);
     return result as UserDto;
   },
 
@@ -54,7 +54,7 @@ export default {
   async getSession() {
     const { $directus } = useNuxtApp();
     const result = await $directus.request(readMe({ fields: ['*.*'], }));
-    console.log("getSession() result:", result);
+    //console.log("getSession() result:", result);
     return result as UserDto;
   },
 
@@ -71,7 +71,7 @@ export default {
       }
     `, undefined, "system");
 
-    console.log("getPermissions result: ", result);
+    //console.log("getPermissions result: ", result);
     return result.permissions as [PermissionDto];
   },
 
@@ -149,7 +149,7 @@ export default {
       console.log("getMenu error: ", err);
     }
 
-    console.log("getMenu result:", ret);
+    //console.log("getMenu result:", ret);
     return ret;
   },
 

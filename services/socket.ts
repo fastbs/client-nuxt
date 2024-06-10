@@ -6,7 +6,7 @@ const URL3 = "http://localhost:4402/";
 
 function getHeader() {
     const ds = new Date().toString();
-    console.log("*** getHeader: ", ds);
+    //console.log("*** getHeader: ", ds);
     return ds;
 }
 

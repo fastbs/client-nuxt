@@ -70,7 +70,7 @@ socket.off();
 
 const updateMenu = async () => {
   menu.value = await UsersService.getMenu() ?? [];
-  console.log("store.user: ", store.user);
+  //console.log("store.user: ", store.user);
 };
 
 onBeforeMount(async () => {

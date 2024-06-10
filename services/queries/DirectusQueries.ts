@@ -368,7 +368,7 @@ export const DELETE_MAP_MARKER = `
     }`;
 
 export const DELETE_MAP_MARKERS = `
-    mutation deleteEmployees($ids: [ID]!) {
+    mutation deleteMapMarkers($ids: [ID]!) {
         delete_map_markers_items(ids: $ids) {
             ids
         }
@@ -429,3 +429,10 @@ query gethInv($id: ID!){
       content
     }
   }`;
+
+export const DELETE_INVESTIGATION = `
+mutation deleteInvestigation($id: ID!) {
+    delete_investigations_item(id: $id) {
+        id
+    }
+}`;

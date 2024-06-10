@@ -15,15 +15,15 @@ export default defineNuxtPlugin(() => {
     };
 
     const errors = (err: any) => {
-        console.log("Toast errors type: ", typeof (err), err);
+        //console.log("Toast errors type: ", typeof (err), err);
         if (Array.isArray(err.errors)){
             (err.errors as Error[]).forEach((error, index) => {
-                console.log("Error ", index, " : ", error);
+                //console.log("Error ", index, " : ", error);
                 processError(error);
             });
 
         } else if (err instanceof  Error) {
-            console.log("Error: ", err.message);
+            //console.log("Error: ", err.message);
             processError(err);            
         }
 /*         if (Array.isArray(err)) {

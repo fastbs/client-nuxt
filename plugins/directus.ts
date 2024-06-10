@@ -19,11 +19,11 @@ import {
 class LocalStorage {
     get() {
         const data = JSON.parse(window.localStorage.getItem("directus-data") ?? "{}");
-        console.log("LocalStorage get data: "); //, data);
+        //console.log("LocalStorage get data: "); //, data);
         return data;
     }
     set(data: any) {
-        console.log("LocalStorage set data: "); //, data);
+        //console.log("LocalStorage set data: "); //, data);
         localStorage.setItem("directus-data", JSON.stringify(data));
     }
 }
@@ -35,7 +35,7 @@ const directus = createDirectus('http://localhost:8055')
 
 async function dQuery(query: string, variables?: Record<string, unknown>, scope?: "items" | "system"){
     const result = await directus.query(query, variables, scope);
-    console.log("dQuery result: ", result);
+    //console.log("dQuery result: ", result);
     return result;
 }
 

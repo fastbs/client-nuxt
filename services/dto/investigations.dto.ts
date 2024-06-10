@@ -25,8 +25,10 @@ export class ContentBlockDto {
 
 export interface CreateInvestigationDto {
     title: string,
-    description: string,
+    description?: string,
     company: CompanyDto; //string,
+    state?: any;
+    content?: any;
 };
 
 export interface InvestigationDto {
@@ -34,10 +36,10 @@ export interface InvestigationDto {
     title: string;
     description?: string;
     image?: ImageDto;
-    current_node: string;
+    //current_node: string;
     state: any;
     content: any;
-    company: CompanyDto;
+    company?: CompanyDto;
     user_created?: UserDto;
 };
 

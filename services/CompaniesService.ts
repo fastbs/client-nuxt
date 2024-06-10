@@ -10,6 +10,7 @@ export default {
   },
 
   async update(id: number, data: UpdateCompanyDto): Promise<CompanyDto | undefined> {
+    console.log(">>>>> Enter CompaniesService - UPDATE");
     const { $dQuery } = useNuxtApp();
     const result = await $dQuery(UPDATE_COMPANY, { id: id, data: data });
     return result ? result.update_companies_item as CompanyDto : undefined;

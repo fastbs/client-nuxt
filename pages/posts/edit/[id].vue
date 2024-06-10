@@ -136,7 +136,7 @@ const updatePost = async () => {
     }
     const response = await PostsService.update(post.value.id, updatePost);
     if (response) {
-      $toast.success("Публикация добавлена");
+      $toast.success("Публикация изменена");
       router.push({ name: "posts" });
     }
   }

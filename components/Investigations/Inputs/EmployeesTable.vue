@@ -13,7 +13,7 @@
                     </div>
                     <div>
                         <span class="p-input-icon-left">
-                            <i class="pi pi-search" />
+                            <i class="pi pi-search mr-2" />
                             <pInputText v-model="filters['global'].value" placeholder="Поиск..." />
                         </span>
                     </div>
@@ -40,7 +40,7 @@
                     <template v-if="field == 'employee'">
                         <div class="flex">
                             <pDropdown v-model="data['employee']" :options="employees" optionLabel="name"
-                                optionValue="_id" placeholder="Выберите сотрудника"
+                                optionValue="id" placeholder="Выберите сотрудника"
                                 :pt="{ root: { class: 'flex flex-grow-1' } }"></pDropdown>
                             <pButton icon="pi pi-plus" severity="primary" v-tooltip.bottom="'Добавить сотрудника'"
                                 :pt="{ root: { class: 'flex ml-1' } }" @click="openAddEmployeeDialog(data)" />
@@ -49,7 +49,7 @@
                     <template v-if="field == 'job_title'">
                         <div class="flex">
                             <pDropdown v-model="data['job_title']" :options="jobTitles" optionLabel="name"
-                                optionValue="_id" placeholder="Выберите должность"
+                                optionValue="id" placeholder="Выберите должность"
                                 :pt="{ root: { class: 'flex flex-grow-1' } }">
                             </pDropdown>
                             <pButton icon="pi pi-plus" severity="primary" v-tooltip.bottom="'Добавить должность'"
@@ -90,7 +90,7 @@
                     </div>
                     <div class="flex">
                         <pButton label="Заполнить" icon="pi pi-pencil" :disabled="!modalName"
-                            @click="fiilShortName()" />
+                            @click="fillShortName()" />
                     </div>
                 </div>
                 <small v-if="!modalShortNameState" class="p-error fadeinup animation-duration-200" id="text-error">{{
@@ -138,7 +138,6 @@
 import dayjs from "dayjs";
 import { FilterMatchMode } from 'primevue/api';
 import type { DataTableCellEditCompleteEvent } from "primevue/datatable";
-//import type { DropdownChangeEvent } from "primevue/dropdown";
 
 import UsersService from "@/services/UsersService";
 import EmployeesService from "@/services/EmployeesService";
@@ -147,15 +146,11 @@ import type { EmployeeDto } from "@/services/dto/employees.dto";
 import type { JobTitleDto } from "@/services/dto/jobtitles.dto";
 import type { EmployeesTableItemDto } from "@/services/dto/employees.dto";
 
-/*
+const modelValue = defineModel<EmployeesTableItemDto[]>({ type: Array, required: true });
+const readyState = defineModel<boolean>("readyState", { type: Boolean, required: true });
 const props = defineProps({
-    modelValue: Array,
-    company: String,
-    readyState: Boolean,
+    company: { type: Number, required: true },
 });
-*/
-
-const emit = defineEmits(['update:modelValue', 'update:readyState']);
 
 const store = useMainStore();
 const route = useRoute();
@@ -163,9 +158,6 @@ const router = useRouter();
 const confirm = useConfirm();
 const { $toast } = useNuxtApp();
 
-let company = 0;
-const modelValue  = defineModel<EmployeesTableItemDto[]>();
-const readyState = defineModel<boolean>("readyState");
 const loadEmployees = ref(false);
 const loadJobTitles = ref(false);
 const employees = ref<EmployeeDto[]>([]);
@@ -186,25 +178,14 @@ const dataChanged = ref(false);
 
 const loading = computed(() => !(loadEmployees.value && loadJobTitles.value));
 const modalNameState = computed(() => modalName.value.length >= 5 && !duplicate.value);
-const invalidModalNameFeedback = computed(() => {
-    if (duplicate.value) { return "Ф.И.О. уже зарегистрировано" }
-    else { return "Минимум 5 символов"; }
-});
+const invalidModalNameFeedback = computed(() => duplicate.value ? "Ф.И.О. уже зарегистрировано" : "Минимум 5 символов");
 const invalidModalShortNameFeedback = computed(() => "Минимум 5 символов");
 const modalShortNameState = computed(() => modalShortName.value.length >= 5 ? true : false);
 const modalState = computed(() => modalNameState.value && modalShortNameState.value);
-/* const readyState = computed({
-    get() {
-        return Boolean(route.params.readyState);
-    },
-    set(value) {
-        emit('update:readyState', value);
-    }
-}); */
+
 const rowClass = (data: EmployeesTableItemDto) => {
     return [{ 'bg-red-100': Object.values(data).some(x => !x) }];
 };
-
 
 const tableColumns = ref([
     { field: 'employee', header: 'Ф.И.О. руководителя', sortable: true, style: 'width: 20%;' },
@@ -227,7 +208,6 @@ const validateTable = () => {
     }
     readyState.value = result;
 };
-
 
 const onCellEditComplete = (event: DataTableCellEditCompleteEvent) => {
     let { data, value, newValue, field } = event;
@@ -304,7 +284,7 @@ const confirmDeleteSelected = () => {
     validateTable();
 };
 
-const fiilShortName = async () => {
+const fillShortName = async () => {
     let sp = modalName.value.split(" ");
     let sn = "";
     if (sp[0]) {
@@ -320,7 +300,7 @@ const fiilShortName = async () => {
 }
 
 const createEmployee = async () => {
-    const response = await EmployeesService.create({ name: modalName.value, name_short: modalShortName.value, company: company });
+    const response = await EmployeesService.create({ name: modalName.value, name_short: modalShortName.value, company: props.company });
     if (response) {
         loadData(response.id);
         showEmployeeModal.value = false;
@@ -328,7 +308,7 @@ const createEmployee = async () => {
 };
 
 const createJobTitle = async () => {
-    const response = await JobTitlesService.create({ name: modalName.value, name_short: modalShortName.value, company: company });
+    const response = await JobTitlesService.create({ name: modalName.value, name_short: modalShortName.value, company: props.company });
     if (response) {
         loadData(0);
         showJobTitleModal.value = false;
@@ -341,55 +321,16 @@ const decodeDirectors = () => {
     if (modelValue) {
         tableData.value = modelValue.value; // as EmployeesTableItemDto[];
         readyState.value = true;
-        //emit('update:readyState', true);
-        /*         let ds = props.modelValue as EmployeeField[];
-        
-                if (ds.length > 0) {
-                    ds.forEach(item => {
-                        const em = (employees.value as Employee[]).find(x => x._id == item.employee);
-                        const jt = (jobTitles.value as JobTitle[]).find(x => x._id == item.job_title);
-                        if (em && jt) {
-                            let dt: EmployeesTableItemDto = {
-                                //isActive: true,
-                                employee: em._id as string,
-                                //employee_name: em.name,
-                                job_title: jt._id as string,
-                                //job_title_name: jt.name,
-                                basis: item.basis,
-                                starts_at: new Date(item.starts_at), //moment(item.starts_at).format("DD.MM.YYYY"),
-                                ends_at: new Date(item.ends_at), //moment(item.ends_at).format("DD.MM.YYYY"),
-                            };
-                            (tableData.value as EmployeesTableItemDto[]).push(dt);
-                        }
-                    });
-        
-                } */
     }
 };
 
 const loadData = async (ps: number) => {
-    const res1 = await EmployeesService.fetch({
-        "filter": {
-            "company": {
-                "id": {
-                    "_eq": company
-                }
-            }
-        }
-    });
+    const res1 = await EmployeesService.fetch({ "filter": { "company": { "id": { "_eq": props.company } } } });
     if (res1) {
         employees.value = res1;
         loadEmployees.value = true;
     }
-    const res2 = await JobTitlesService.fetch({
-        "filter": {
-            "company": {
-                "id": {
-                    "_eq": company
-                }
-            }
-        }
-    });
+    const res2 = await JobTitlesService.fetch({ "filter": { "company": { "id": { "_eq": props.company } } } });
     if (res2) {
         jobTitles.value = res2;
         loadJobTitles.value = true;
@@ -401,10 +342,6 @@ const loadData = async (ps: number) => {
 
 onMounted(async () => {
     if (UsersService.checkPermission("investigations", "update")) {
-        company = Number(route.params.company);
-        //modelValue = route.params.modelValue as EmployeesTableItemDto[];
-        //readyState = Boolean(route.params.readyState);
-
         loadData(0) //props.modelValue as string);
     } else {
         $toast.errors(new Error("Доступ запрещен - EmployeesTable!"));

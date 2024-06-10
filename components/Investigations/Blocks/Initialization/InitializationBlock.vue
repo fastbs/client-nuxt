@@ -28,14 +28,14 @@
                     <div v-if="!dc.data.is_periodic" class="field grid">
                         <label for="director" class="col-12 mt-2 mb-2"><strong>Руководитель компании:</strong></label>
                         <div class="col-12 pl-5">
-                            <EmployeeSelect v-model="dc.data.director.employee" :company="Inv.source.company.id"
+                            <EmployeeSelect v-model="dc.data.director.employee" :company="Inv.source.company!.id"
                                 id="director" />
                         </div>
 
                         <label for="directorJobTitle" class="col-12 mt-1 mb-2"><strong>Должность руководителя
                                 компании:</strong></label>
                         <div class="col-12 pl-5">
-                            <JobTitleSelect v-model="dc.data.director.job_title" :company="Inv.source.company.id"
+                            <JobTitleSelect v-model="dc.data.director.job_title" :company="Inv.source.company!.id"
                                 id="directorJobTitle" />
                         </div>
 
@@ -55,7 +55,7 @@
                     </div>
 
                     <div v-if="dc.data.is_periodic" class="field grid">
-                        <EmployeesTable v-model="dc.data.directors" :company="Inv.source.company.id"
+                        <EmployeesTable v-model="dc.data.directors" :company="Inv.source.company!.id"
                             v-model:readyState="employeesTableReadyState" id="directorsTable" />
                     </div>
 
@@ -83,7 +83,8 @@ import type { EmployeeDto } from "@/services/dto/employees.dto";
 import type { JobTitleDto } from "@/services/dto/jobtitles.dto";
 import type { EmployeesTableItemDto } from "@/services/dto/employees.dto";
 
-import { exportDocx } from "@/utils/exportDocx.js";
+import { exportReport } from "@/utils/reports.js";
+import { exportReport2 } from "@/utils/reports2";
 import { Investigation } from "@/models/Investigation";
 
 const emit = defineEmits(["block-action"]);
@@ -96,7 +97,6 @@ const { $toast } = useNuxtApp();
 
 let invModel = defineModel<Investigation>("Inv", { type: Investigation, required: true });
 let Inv = new Investigation();
-//let Inv: Investigation = invModel.value;
 const dc = ref<ContentBlockDto>(Inv.currentBlock);
 
 const employees = ref<EmployeeDto[]>();
@@ -148,8 +148,8 @@ onMounted(async () => {
 });
 
 const loadData = async () => {
-    const resEmployees = await EmployeesService.fetch({ "filter": { "company": { "id": { "_eq": Inv.source.company.id } } } });
-    const resJobTitles = await JobTitlesService.fetch({ "filter": { "company": { "id": { "_eq": Inv.source.company.id } } } });
+    const resEmployees = await EmployeesService.fetch({ "filter": { "company": { "id": { "_eq": Inv.source.company!.id } } } });
+    const resJobTitles = await JobTitlesService.fetch({ "filter": { "company": { "id": { "_eq": Inv.source.company!.id } } } });
 
     if (resEmployees && resJobTitles) {
         employees.value = resEmployees;
@@ -161,20 +161,16 @@ const loadData = async () => {
 };
 
 const finishBlock = async () => {
-    Inv.updateCurrentBlock(dc.value.data);
+    Inv.updateCurrentBlock(toRaw(dc.value.data), formState.value);
     emit("block-action", { p1: "Next block", p2: "FixationBlock" });
 };
 
 const createReport = async (format: string) => {
     console.log("createReport  format: ", format);
-    //loadData();
-
-    //let blob = new Blob(["Hello, world!"], { type: "text/plain;charset=utf-8" });
-    //saveAs(blob, "hello world.txt");
     dayjs.locale("ru");
 
-    const employee = find(employees.value, { '_id': dc.value.data.director.employee }) as EmployeeDto;
-    const jobTitle = find(jobTitles.value, { '_id': dc.value.data.director.job_title }) as JobTitleDto;
+    const employee = find(employees.value, { 'id': dc.value.data.director.employee }) as EmployeeDto;
+    const jobTitle = find(jobTitles.value, { 'id': dc.value.data.director.job_title }) as JobTitleDto;
     let director = {
         employee: employee ? employee.name : "",
         job_title: jobTitle ? jobTitle.name : "",
@@ -183,8 +179,8 @@ const createReport = async (format: string) => {
 
     let directors = <object[]>[];
     (dc.value.data.directors as [EmployeesTableItemDto]).forEach(item => {
-        const employee = find(employees.value, { '_id': item.employee }) as EmployeeDto;
-        const jobTitle = find(jobTitles.value, { '_id': item.job_title }) as JobTitleDto;
+        const employee = find(employees.value, { 'id': item.employee }) as EmployeeDto;
+        const jobTitle = find(jobTitles.value, { 'id': item.job_title }) as JobTitleDto;
 
         let nd = {
             employee: employee ? employee.name : "",
@@ -197,13 +193,12 @@ const createReport = async (format: string) => {
         directors.push(nd);
     })
 
-
     let data = {
         reportType: dc.value.type as string,
         reportTitle: dc.value.name as string,
         reportTime: dayjs().format("DD.MM.YYYY HH:mm:ss"),
 
-        companyName: Inv.source.company.name,
+        companyName: Inv.source.company!.name,
         investigationTitle: Inv.source.title,
         is_periodic: dc.value.data.is_periodic as boolean, // ? 1 : 0,
         director: director,
@@ -225,17 +220,8 @@ const createReport = async (format: string) => {
 
     console.log("data: ", data);
 
-    if (format == "docx") {
-        exportDocx("/reports/InitializationBlock.docx", data, `Report - ${Inv.source.title} - ${dc.value.name}.docx`);
-    } else if (format == "pdf") {
-        let doc = await exportDocx("/template.docx", data);
-        console.log(">>>>> doc: ", doc);
-        //const convertedToPdfMaker = await ConvertToPdf(doc, 'buffer');
-        //console.log(">>>>> convertedToPdfMaker: ", convertedToPdfMaker) ;
-    }
-
+    //exportReport(format, "/reports/InitializationBlock.docx", data, `Report - ${Inv.source.title} - ${dc.value.name}`).catch(err => $toast.errors(err as Error));
+    exportReport2("InitializationBlock", format, data, `Report - ${Inv.source.title} - ${dc.value.name}`).catch(err => $toast.errors(err as Error));
 };
-
-
 
 </script>

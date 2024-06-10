@@ -1,29 +1,29 @@
-import api from "@/services/api";
-import { useQuery, useMutation } from "@vue/apollo-composable";
-//import { GET_INVESTIGATIONS, GET_INVESTIGATION, CREATE_INVESTIGATION, UPDATE_INVESTIGATION } from "@/services/queries/GraphqlQueries";
-
+import { v4 as uuidv4 } from 'uuid';
 import { createItem, updateItem } from '@directus/sdk';
 import type { CreateInvestigationDto, InvestigationDto } from "./dto/investigations.dto";
-import { FETCH_INVESTIGATIONS, GET_INVESTIGATION } from "./queries/DirectusQueries";
+import { FETCH_INVESTIGATIONS, GET_INVESTIGATION, DELETE_INVESTIGATION } from "./queries/DirectusQueries";
 
 export default {
-/*   create(payload: CreateInvestigationDto, onDone: (result: InvestigationDto) => void, onError: (error: Error) => void) {
-    const mutation = useMutation(CREATE_INVESTIGATION);
-    mutation.mutate({ payload: payload });
-
-    mutation.onDone(mutationResult => {
-      onDone(mutationResult.data.createInvestigation);
-    });
-
-    mutation.onError(error => {
-      const err = new Error;
-      err.message = "Investigation not created! - " + error.message;
-      onError(err);
-    })
-  }, */
-
   async create(data: CreateInvestigationDto): Promise<InvestigationDto | undefined> {
     const { $directus } = useNuxtApp();
+    data.state = JSON.stringify({ "counter": 0, "current_node": "" });
+    data.content = JSON.stringify({
+      "_id": uuidv4(),
+      "name": "Инициализация (из клиента)",
+      "type": "InitializationBlock",
+      "is_ready": false,
+      "data": {
+        "is_periodic": false,
+        "director": {
+          "employee": "",
+          "job_title": "",
+          "basis": ""
+        },
+        "directors": []
+      },
+      //"children": []
+    });
+
     const result = await $directus.request(createItem('investigations', data));
     return result as InvestigationDto;
   },
@@ -33,7 +33,7 @@ export default {
     const result = await $dQuery(FETCH_INVESTIGATIONS, vars);
     console.log(">>> Investigation fetch result:", result);
     return result ? result.investigations as InvestigationDto[] : undefined;
-  },  
+  },
 
   async get(id: number): Promise<InvestigationDto | undefined> {
     const { $dQuery } = useNuxtApp();
@@ -43,42 +43,20 @@ export default {
 
   async update(id: number, data: InvestigationDto): Promise<InvestigationDto | undefined> {
     const { $directus } = useNuxtApp();
-    const result = await $directus.request(updateItem('investigations', id, data));
+    const sc = structuredClone(data) as Record<string, any>;
+    delete sc.id;
+    delete sc.user_created;
+    delete sc.company;
+    delete sc.image;
+
+    const result = await $directus.request(updateItem('investigations', id, sc));
     return result as InvestigationDto;
-  },  
-
-  /*
-  update2(payload: InvestigationDto, onDone: (result: InvestigationDto) => void, onError: (error: Error) => void) {
-    const mutation = useMutation(UPDATE_INVESTIGATION);
-    mutation.mutate({ payload: payload });
-    
-    mutation.onDone(mutationResult => {
-      onDone(mutationResult.data.investigation);
-    });
-
-    mutation.onError(err => {
-      const error = new Error;
-      error.message = "Error in InvestigationService.update2 - " + err.message;
-      onError(error);
-    });
   },
 
-  update(id: string, inv: InvestigationDto) {
-    return api().put(`investigations/${id}`, inv);
-  }, */
-
-  /*  
-    delete (id) {
-      return api().delete(`posts/${id}`)
-    },
-  
-    getImagePath(id) {
-      const imagePath = `http://localhost:4100/posts/image/${id}`;
-      return imagePath;
-    },
-  
-    getCategories() {
-      return api().get('posts/categories');
-    }, */
+  async delete(id: number): Promise<number | undefined> {
+    const { $dQuery } = useNuxtApp();
+    const result = await $dQuery(DELETE_INVESTIGATION, { id: id });
+    return result ? result.delete_investigations_item.id as number : undefined;
+  },
 
 };

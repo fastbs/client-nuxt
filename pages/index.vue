@@ -18,7 +18,7 @@
           <!-- <template #subtitle> Card subtitle </template> -->
           <template #content>
             <p style="overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;">{{
-              card.text }}</p>
+      card.text }}</p>
           </template>
           <template #footer>
             <pButton icon="pi pi-check" label="Primary" />
@@ -38,8 +38,8 @@
       <pButton label="Secondary" severity="secondary" @click="sc()" />
       <pButton label="Success" severity="success" @click="handleAttachment()" />
       <pButton label="Info" severity="info" @click="wsQuery($event)" />
-      <pButton label="Warning" severity="warning" @click="lgt()"/>
-      <pButton label="Help" severity="help" />
+      <pButton label="Warning" severity="warning" @click="lgt()" />
+      <pButton label="Help" severity="help" @click="custom()" />
       <pButton label="Danger" severity="danger" />
       <br />
       <input id="hiddenAttachment" class="hide" type="file" multiple @change.prevent="fileChange($event)" />
@@ -49,6 +49,8 @@
 </template>
 
 <script lang="ts" setup>
+import { customEndpoint } from '@directus/sdk';
+
 import EmployesService from "@/services/EmployeesService"
 import { socket } from "@/services/socket";
 import type { CreateJobTitleDto } from "@/services/dto/jobtitles.dto";
@@ -65,7 +67,7 @@ onMounted(async () => {
 });
 
 const ci = async () => {
-  const njt: CreateJobTitleDto ={
+  const njt: CreateJobTitleDto = {
     name: "From Main",
     name_short: "fm",
     company: 81     // 81 - Zais   84 - Admin
@@ -88,6 +90,16 @@ const handleAttachment = () => {
   if (node != null) {
     node.click();
   }
+};
+
+const custom = async () => {
+  const { $directus } = useNuxtApp();
+  const result = await $directus.request(customEndpoint({
+    path: '/reports/',
+    method: 'GET',
+  }));
+
+  console.log("Custom endpoint result:", result);
 };
 
 const fileChange = async (event: Event) => {

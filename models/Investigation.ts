@@ -13,7 +13,7 @@ export class Investigation {
         id: 0,
         title: "",
         content: {},
-        current_node: "",
+        //current_node: "",
         state: {
         },
         company: {
@@ -77,6 +77,7 @@ export class Investigation {
     }
 
     async save() {
+        console.log(">>>>> Enter Investigation save");
         if (this.isReady) {
             return await InvestigationsService.update(this.source.id, this.source);
         }
@@ -120,7 +121,7 @@ export class Investigation {
         if (cn == "" || objectPath.has(this.source.content, cn)) {
             this._currentNode = cn;
             console.log("_currentNode:", this._currentNode);
-            this.source.current_node = cn;
+            this.source.state.current_node = cn;
             this._currentComponent = objectPath.get(this.source.content, cn).type;
             this._currentBlock = structuredClone(toRaw(objectPath.get(this.source.content, cn)));
             //this._currentBlock = _.get(this.source.content, cn);  // _.cloneDeep(
@@ -130,14 +131,16 @@ export class Investigation {
         return result;
     }
 
-    updateCurrentBlock(dc: object): void {
+    updateCurrentBlock(dc: object, readyState = false): void {
+        console.log("updateCurrentBlock dc:", dc);
         this.currentBlock.data = dc;
+        this.currentBlock.is_ready = readyState;
         let path = "content";
         if (this._currentNode != "") {
             path = path + "." + this._currentNode;
         }
-        path = path + ".data"
-        objectPath.set(this.source, path, dc);
+        objectPath.set(this.source, path + ".data", dc);
+        objectPath.set(this.source, path + ".is_ready", readyState);
     }
 
     getNode(path: string): Node | boolean {

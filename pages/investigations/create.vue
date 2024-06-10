@@ -53,6 +53,7 @@
 <script lang="ts" setup>
 import UsersService from "@/services/UsersService";
 import CompaniesService from "@/services/CompaniesService";
+import { Investigation } from "@/models/Investigation";
 import InvestigationsService from "@/services/InvestigationsService";
 import type { CompanyDto } from "@/services/dto/companies.dto";
 import type { CreateInvestigationDto } from "@/services/dto/investigations.dto";
@@ -70,12 +71,16 @@ const companies = ref<CompanyDto[]>();
 
 const companyState = computed(() => (inv.company.id ? true : false));
 const titleState = computed(() => (inv.title.length >= 5));
-const descriptionState = computed(() => (inv.description.length >= 5));
+const descriptionState = computed(() => (inv.description!.length >= 5));
 const formState = computed(() => (companyState.value && titleState.value && descriptionState.value));
 
 
 const addInvestigation = async () => {
   if (formState) {
+/*     let Inv = new Investigation();
+    Inv.createNode(inv); */
+
+
     const response = await InvestigationsService.create(inv);
     if (response) {
       $toast.success("Создано новое расследование");

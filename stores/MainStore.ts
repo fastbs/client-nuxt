@@ -51,32 +51,31 @@ export const useMainStore = defineStore("main", {
       const toast = useToast();
 
       socket.on('connect', function () {
-        console.log('*** WS *** Connected');
+        //console.log('*** WS *** Connected');
         toast.add({ severity: 'success', summary: 'WS', detail: "WS connected", life: 5000 });
         socket.emit('events', { test: 'test' }, (response: any) =>
           console.log('*** WS *** events response:', response),
         );
-        socket.emit('identity', 12345, (response: any) =>
-          console.log('*** WS *** Identity:', response),
+        socket.emit('identity', 12345, 
+        //(response: any) => console.log('*** WS *** Identity:', response),
         );
-        socket.emit('fbs', { num: 777, str: "my str" }, (response: any) =>
-          console.log('*** WS *** FBS:', response),
+        socket.emit('fbs', { num: 777, str: "my str" },
+         //(response: any) => console.log('*** WS *** FBS:', response),
         );
       });
 
       socket.on('events', function (data) {
-        console.log('*** WS *** event', data);
+        //console.log('*** WS *** event', data);
         toast.add({ severity: 'success', summary: 'WS', detail: "WS event: " + data, life: 5000 });
       });
 
       socket.on('exception', function (data) {
-        console.log('*** WS *** event', data);
+        //console.log('*** WS *** event', data);
       });
 
       socket.on('disconnect', function () {
-        console.log('*** WS *** Disconnected');
+        //console.log('*** WS *** Disconnected');
         toast.add({ severity: 'error', summary: 'WS', detail: "WS disconnected", life: 5000 });
-
       });
     },
 

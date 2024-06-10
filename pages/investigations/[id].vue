@@ -12,11 +12,11 @@
       </div>
       <div class="col-8">
         <h3>Расследованиe: {{ Inv.source.title }} - Id: {{ Inv.source.id }}</h3>
-        <h4>Компания: {{ Inv.source.company.name }}</h4>
+        <h4>Компания: {{ Inv.source.company!.name }}</h4>
       </div>
       <div class="col ">
         <div class="flex justify-content-end flex-wrap">
-          <pButton id="back-button" severity="primary" @click="goBackward" :disabled="!parentNode" label="Назад"
+          <pButton id="back-button" severity="primary" @click="goBackward()" :disabled="!parentNode" label="Назад"
             :pt="{ root: { class: 'mr-2' } }" />
           <!--           <b-popover v-if="(parentNode as boolean)" target="back-button" title="Popover title" triggers="hover" placement="bottom">{{ (parentNode as Node).name }}</b-popover>
  -->
@@ -51,14 +51,6 @@
 </template>
 
 <script lang="ts" setup>
-import { v4 as uuidv4 } from 'uuid';
-
-const store = useMainStore();
-const route = useRoute();
-const router = useRouter();
-const confirm = useConfirm();
-const { $toast } = useNuxtApp();
-
 import { InitializationBlock } from '#components';
 import { FixationBlock } from '#components';
 import { BossAcceptBlock } from '#components';
@@ -71,26 +63,19 @@ components.set("BossAcceptBlock", BossAcceptBlock);
 components.set("FakeBlock", FakeBlock);
 
 import UsersService from "@/services/UsersService";
-import InvestigationsService from "@/services/InvestigationsService";
-import type { InvestigationDto, BlockActionEventDto, ContentBlockDto } from "@/services/dto/investigations.dto";
+import type { BlockActionEventDto, ContentBlockDto } from "@/services/dto/investigations.dto";
 import type { Node } from "@/services/dto/investigations.dto";
-//import { InvInjectionKey } from "@/components/Keys";
 import { Investigation } from '@/models/Investigation';
 
+const store = useMainStore();
+const route = useRoute();
+const router = useRouter();
+const confirm = useConfirm();
+const { $toast } = useNuxtApp();
 
 const Inv = new Investigation();
 const currentComponent = ref("");
 let currentBlock: ContentBlockDto = Inv.currentBlock;
-/*
-{
-  id: "",
-  name: "",
-  type: "",
-  is_ready: false,
-  data: {},
-  children: {},
-};
-*/
 
 const loading = ref(true);
 const parentNode = ref<Node | boolean>();
@@ -107,6 +92,7 @@ const upds = async () => {
 const getInvestigation = async () => {
   loading.value = true;
   if (await Inv.load(Number(route.params.id))) {
+    console.log("Inv.source after load:", Inv.source);
     realSwitchBlock(Inv.currentNode);
     loading.value = false;
   };
@@ -127,14 +113,6 @@ const realSwitchBlock = async (path: string) => {
   Inv.setCurrentNode(path);
   parentNode.value = Inv.getParentNode();
   childNodes.value = Inv.getChildNodes();
-
-  /*  
-    provide(InvInjectionKey, Inv);
-    provide("Inv", Inv);
-    const QQ = "very useful string";
-    console.log("QQ in parent:", QQ);
-    provide("QQ", QQ);
-  */
 
   currentComponent.value = Inv.currentComponent;
   currentBlock = Inv.currentBlock;
@@ -177,6 +155,8 @@ const goForward = async (index: number) => {
 const saveInvestigation = async () => {
   if (await Inv.save()) {
     $toast.success("Расследование сохранено");
+  } else {
+    $toast.errors(new Error("Ошибка сохранения - Investigations [id]!"));
   }
 };
 

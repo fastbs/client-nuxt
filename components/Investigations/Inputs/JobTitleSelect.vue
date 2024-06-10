@@ -88,6 +88,7 @@ const createJobTitle = async () => {
         });
     if (response) {
         loadJobTitles(String(response.id));
+        modelValue.value = String(response.id);
         showModal.value = false;
     }
 };
