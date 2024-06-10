@@ -83,8 +83,8 @@ import type { EmployeeDto } from "@/services/dto/employees.dto";
 import type { JobTitleDto } from "@/services/dto/jobtitles.dto";
 import type { EmployeesTableItemDto } from "@/services/dto/employees.dto";
 
-import { exportReport } from "@/utils/reports.js";
-import { exportReport2 } from "@/utils/reports2";
+//import { exportReport } from "@/utils/reports.js";
+import { exportReport } from "@/utils/reports";
 import { Investigation } from "@/models/Investigation";
 
 const emit = defineEmits(["block-action"]);
@@ -166,7 +166,6 @@ const finishBlock = async () => {
 };
 
 const createReport = async (format: string) => {
-    console.log("createReport  format: ", format);
     dayjs.locale("ru");
 
     const employee = find(employees.value, { 'id': dc.value.data.director.employee }) as EmployeeDto;
@@ -218,10 +217,7 @@ const createReport = async (format: string) => {
         ],
     }
 
-    console.log("data: ", data);
-
-    //exportReport(format, "/reports/InitializationBlock.docx", data, `Report - ${Inv.source.title} - ${dc.value.name}`).catch(err => $toast.errors(err as Error));
-    exportReport2("InitializationBlock", format, data, `Report - ${Inv.source.title} - ${dc.value.name}`).catch(err => $toast.errors(err as Error));
+    exportReport("InitializationBlock", format, data, `Report - ${Inv.source.title} - ${dc.value.name}`).catch(err => $toast.errors(err as Error));
 };
 
 </script>
