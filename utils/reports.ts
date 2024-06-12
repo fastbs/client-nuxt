@@ -2,7 +2,7 @@ import { customEndpoint } from '@directus/sdk';
 import { saveAs } from "file-saver";
 
 export const exportReport = async (name: string, format: string, data: object, fileName = "No name") => {
-    const { $directus } = useNuxtApp();
+    const { $directus, $toast } = useNuxtApp();
 
     const body = {
         name,
@@ -17,8 +17,11 @@ export const exportReport = async (name: string, format: string, data: object, f
         body: JSON.stringify(body),
     })) as any;
 
-    console.log("Custom endpoint result:", result);
-    saveAs(await result.blob(), fileName + "." + format);
-
-    return true;
+    if (result.ok) {
+        saveAs(await result.blob(), fileName + "." + format);
+        $toast.success("Отчет сохранен: " + fileName + "." + format);
+    }
+    else {
+        throw (new Error(result.statusText));
+    }
 }
